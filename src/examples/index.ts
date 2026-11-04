@@ -18,6 +18,7 @@ import { SpeciesBarChart } from './016-species-bar-chart/SpeciesBarChart';
 import { ScatterPlotAndBarChart } from './017-scatter-plot-and-bar-chart/ScatterPlotAndBarChart';
 import { BrushScatterToBars } from './018-brush-scatter-to-bars/BrushScatterToBars';
 import { SingleHistogram } from './019-single-histogram/SingleHistogram';
+import { BasicHistogram } from './020-basic-histogram/BasicHistogram';
 
 export interface Example {
   id: string;
@@ -120,6 +121,11 @@ export const examples: Example[] = [
     id: '19',
     name: 'Single Histogram',
     component: SingleHistogram,
+  },
+  {
+    id: '20',
+    name: 'Basic Histogram',
+    component: BasicHistogram,
   },
 ];
 
