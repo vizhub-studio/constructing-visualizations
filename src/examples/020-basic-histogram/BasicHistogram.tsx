@@ -4,10 +4,11 @@ import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
 import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
-import { renderMarks } from './renderMarks';
+import { renderMarks, type HistogramBin } from './renderMarks';
 
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
+const binGap = 1;
 const xAxisTicks = 8;
 const yAxisTicks = 5;
 const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
@@ -42,13 +43,13 @@ export function BasicHistogram() {
 
     return bin<PenguinRow, number>()
       .value(binValue)
-      .thresholds(targetBinCount)(filteredData);
+      .thresholds(targetBinCount)(filteredData) as HistogramBin[];
   }, [data]);
 
   const scales = useMemo(() => {
     if (!bins || !size.width || !size.height) return null;
     const xScale = scaleLinear()
-      .domain([bins[0].x0!, bins[bins.length - 1].x1!])
+      .domain([bins[0].x0, bins[bins.length - 1].x1])
       .range([margin.left, size.width - margin.right]);
     const yScale = scaleLinear()
       .domain([0, Math.max(...bins.map((bin) => bin.length))])
@@ -61,7 +62,7 @@ export function BasicHistogram() {
   useEffect(() => {
     if (!bins || !scales || !marksRef.current) return;
     const { xScale, yScale } = scales;
-    renderMarks(select(marksRef.current), { bins, xScale, yScale });
+    renderMarks(select(marksRef.current), { bins, xScale, yScale, binGap });
   }, [bins, scales]);
 
   // D3 draws the axes immediately. There are no transitions.
