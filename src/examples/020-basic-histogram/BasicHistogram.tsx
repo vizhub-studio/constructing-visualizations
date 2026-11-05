@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { bin } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
 import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 import { renderMarks, type HistogramBin } from './renderMarks';
+import { useDimensions } from './useDimensions';
 
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
@@ -17,21 +18,10 @@ const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
 // tooltips, or animation. The essential steps are: load, bin, scale, draw.
 export function BasicHistogram() {
   const data = usePenguinsDataset();
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { ref: containerRef, dimensions: size } = useDimensions();
   const marksRef = useRef<SVGGElement>(null);
   const xAxisRef = useRef<SVGGElement>(null);
   const yAxisRef = useRef<SVGGElement>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry) setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
 
   // d3.bin turns continuous measurements into intervals containing rows.
   const bins = useMemo(() => {
