@@ -23,7 +23,7 @@ export function renderMarks(
     .join('rect')
     .attr('x', (bin) => xScale(bin.x0) + binGap / 2)
     .attr('y', (bin) => yScale(bin.length))
-    .attr('width', (bin) => Math.max(0, xScale(bin.x1) - xScale(bin.x0) - binGap))
-    .attr('height', (bin) => Math.max(0, yScale(0) - yScale(bin.length)))
+    .attr('width', (bin) => xScale(bin.x1) - xScale(bin.x0) - binGap)
+    .attr('height', (bin) => yScale(0) - yScale(bin.length))
     .attr('fill', 'black');
 }
