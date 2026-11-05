@@ -37,12 +37,12 @@ export function BasicHistogram() {
     if (!data) return null;
 
     // Keep the full dataset; filter only the measurements being binned.
-    const rows = data.filter((penguin) => Number.isFinite(binValue(penguin)));
-    if (!rows.length) return null;
+    const filteredData = data.filter((penguin) => Number.isFinite(binValue(penguin)));
+    if (!filteredData.length) return null;
 
     const generatedBins = bin<PenguinRow, number>()
       .value(binValue)
-      .thresholds(targetBinCount)(rows);
+      .thresholds(targetBinCount)(filteredData);
 
     // Validate boundaries here so scales and bars can use them directly.
     return generatedBins.length > 0 && generatedBins.every(hasBinBounds) ? generatedBins : null;
