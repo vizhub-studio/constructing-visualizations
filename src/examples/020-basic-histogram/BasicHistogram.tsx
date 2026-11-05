@@ -5,9 +5,21 @@ import { csv } from 'd3-fetch';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
 
+// Preserve all eight columns in the Palmer Penguins dataset, even though this
+// example only bins body mass. Missing numeric values are represented as NaN.
 interface Penguin {
+  species: string;
+  island: string;
+  bill_length_mm: number;
+  bill_depth_mm: number;
+  flipper_length_mm: number;
   body_mass_g: number;
+  sex: string;
+  year: string;
 }
+
+const parseNumber = (value: string | undefined) =>
+  value?.trim() ? Number(value) : NaN;
 
 const dataUrl = import.meta.env.BASE_URL + 'datasets/palmer-penguins/penguins.csv';
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
@@ -24,12 +36,16 @@ export function BasicHistogram() {
 
   useEffect(() => {
     let cancelled = false;
-    csv<Penguin>(dataUrl, (row) => {
-      const rawMass = row.body_mass_g;
-      const mass = Number(rawMass);
-      // Ignore missing or invalid measurements rather than treating blanks as 0.
-      return rawMass?.trim() && Number.isFinite(mass) ? { body_mass_g: mass } : null;
-    })
+    csv<Penguin>(dataUrl, (row) => ({
+      species: row.species ?? '',
+      island: row.island ?? '',
+      bill_length_mm: parseNumber(row.bill_length_mm),
+      bill_depth_mm: parseNumber(row.bill_depth_mm),
+      flipper_length_mm: parseNumber(row.flipper_length_mm),
+      body_mass_g: parseNumber(row.body_mass_g),
+      sex: row.sex ?? '',
+      year: row.year ?? '',
+    }))
       .then((rows) => {
         if (!cancelled) setData(rows);
       })
@@ -55,7 +71,11 @@ export function BasicHistogram() {
       data
         ? bin<Penguin, number>()
             .value((penguin) => penguin.body_mass_g)
-            .thresholds(targetBinCount)(data)
+            .thresholds(targetBinCount)(
+              // Only body mass is required for this chart. Keep the other
+              // measurements (including missing values) on each original row.
+              data.filter((penguin) => Number.isFinite(penguin.body_mass_g)),
+            )
         : [],
     [data],
   );
