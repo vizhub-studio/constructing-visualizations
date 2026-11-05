@@ -4,6 +4,7 @@ import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
 import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
+import { renderMarks } from './renderMarks';
 
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
@@ -17,6 +18,7 @@ export function BasicHistogram() {
   const data = usePenguinsDataset();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const marksRef = useRef<SVGGElement>(null);
   const xAxisRef = useRef<SVGGElement>(null);
   const yAxisRef = useRef<SVGGElement>(null);
 
@@ -55,6 +57,13 @@ export function BasicHistogram() {
     return { xScale, yScale };
   }, [bins, size.width, size.height]);
 
+  // Render the histogram marks with D3, as in the earlier examples.
+  useEffect(() => {
+    if (!bins || !scales || !marksRef.current) return;
+    const { xScale, yScale } = scales;
+    renderMarks(select(marksRef.current), { bins, xScale, yScale });
+  }, [bins, scales]);
+
   // D3 draws the axes immediately. There are no transitions.
   useEffect(() => {
     if (!scales || !xAxisRef.current || !yAxisRef.current) return;
@@ -68,21 +77,7 @@ export function BasicHistogram() {
       <svg className="absolute inset-0 w-full h-full" role="img" aria-label="Histogram of Palmer Penguins body mass">
         {bins && scales && (
           <>
-            {bins.map((bucket, index) => {
-              const x = scales.xScale(bucket.x0!);
-              const right = scales.xScale(bucket.x1!);
-              const y = scales.yScale(bucket.length);
-              return (
-                <rect
-                  key={index}
-                  x={x + 0.5}
-                  y={y}
-                  width={Math.max(0, right - x - 1)}
-                  height={Math.max(0, scales.yScale(0) - y)}
-                  fill="black"
-                />
-              );
-            })}
+            <g ref={marksRef} className="marks" />
             <g ref={xAxisRef} transform={'translate(0, ' + (size.height - margin.bottom) + ')'} />
             <g ref={yAxisRef} transform={'translate(' + margin.left + ', 0)'} />
             <text x={size.width / 2} y={margin.top / 2} textAnchor="middle" fontSize={20}>
