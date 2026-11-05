@@ -7,6 +7,7 @@ import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
+const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
 
 // The same body-mass histogram as example 019, without controls, hovering,
 // tooltips, or animation. The essential steps are: load, bin, scale, draw.
@@ -32,11 +33,11 @@ export function BasicHistogram() {
     () =>
       data
         ? bin<PenguinRow, number>()
-            .value((penguin) => penguin.body_mass_g)
+            .value(binValue)
             .thresholds(targetBinCount)(
               // Select the measurement only at binning time; retain full rows
               // in the dataset returned by the local usePenguinsDataset hook.
-              data.filter((penguin) => Number.isFinite(penguin.body_mass_g)),
+              data.filter((penguin) => Number.isFinite(binValue(penguin))),
             )
         : [],
     [data],
