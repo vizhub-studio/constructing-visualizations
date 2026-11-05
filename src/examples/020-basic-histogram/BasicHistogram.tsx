@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { bin, type Bin } from 'd3-array';
+import { bin } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
@@ -8,10 +8,6 @@ import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
 const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
-
-type BoundedBin = Bin<PenguinRow, number> & { x0: number; x1: number };
-const hasBinBounds = (bucket: Bin<PenguinRow, number>): bucket is BoundedBin =>
-  bucket.x0 !== undefined && bucket.x1 !== undefined;
 
 // The same body-mass histogram as example 019, without controls, hovering,
 // tooltips, or animation. The essential steps are: load, bin, scale, draw.
@@ -40,18 +36,15 @@ export function BasicHistogram() {
     const filteredData = data.filter((penguin) => Number.isFinite(binValue(penguin)));
     if (!filteredData.length) return null;
 
-    const generatedBins = bin<PenguinRow, number>()
+    return bin<PenguinRow, number>()
       .value(binValue)
       .thresholds(targetBinCount)(filteredData);
-
-    // Validate boundaries here so scales and bars can use them directly.
-    return generatedBins.length > 0 && generatedBins.every(hasBinBounds) ? generatedBins : null;
   }, [data]);
 
   const scales = useMemo(() => {
     if (!bins || !size.width || !size.height) return null;
     const xScale = scaleLinear()
-      .domain([bins[0].x0, bins[bins.length - 1].x1])
+      .domain([bins[0].x0!, bins[bins.length - 1].x1!])
       .range([margin.left, size.width - margin.right]);
     const yScale = scaleLinear()
       .domain([0, Math.max(...bins.map((bucket) => bucket.length))])
@@ -75,8 +68,8 @@ export function BasicHistogram() {
         {bins && scales && (
           <>
             {bins.map((bucket, index) => {
-              const x = scales.xScale(bucket.x0);
-              const right = scales.xScale(bucket.x1);
+              const x = scales.xScale(bucket.x0!);
+              const right = scales.xScale(bucket.x1!);
               const y = scales.yScale(bucket.length);
               return (
                 <rect
