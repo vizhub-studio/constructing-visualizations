@@ -1,59 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { bin, max } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
-import { csv } from 'd3-fetch';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
+import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 
-// Preserve all eight columns in the Palmer Penguins dataset, even though this
-// example only bins body mass. Missing numeric values are represented as NaN.
-interface Penguin {
-  species: string;
-  island: string;
-  bill_length_mm: number;
-  bill_depth_mm: number;
-  flipper_length_mm: number;
-  body_mass_g: number;
-  sex: string;
-  year: string;
-}
-
-const parseNumber = (value: string | undefined) =>
-  value?.trim() ? Number(value) : NaN;
-
-const dataUrl = import.meta.env.BASE_URL + 'datasets/palmer-penguins/penguins.csv';
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
 
 // The same body-mass histogram as example 019, without controls, hovering,
 // tooltips, or animation. The essential steps are: load, bin, scale, draw.
 export function BasicHistogram() {
-  const [data, setData] = useState<Penguin[] | null>(null);
+  const data = usePenguinsDataset();
   const [size, setSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const xAxisRef = useRef<SVGGElement>(null);
   const yAxisRef = useRef<SVGGElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    csv<Penguin>(dataUrl, (row) => ({
-      species: row.species ?? '',
-      island: row.island ?? '',
-      bill_length_mm: parseNumber(row.bill_length_mm),
-      bill_depth_mm: parseNumber(row.bill_depth_mm),
-      flipper_length_mm: parseNumber(row.flipper_length_mm),
-      body_mass_g: parseNumber(row.body_mass_g),
-      sex: row.sex ?? '',
-      year: row.year ?? '',
-    }))
-      .then((rows) => {
-        if (!cancelled) setData(rows);
-      })
-      .catch((error) => console.error('Failed to load penguins', error));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -69,11 +31,11 @@ export function BasicHistogram() {
   const bins = useMemo(
     () =>
       data
-        ? bin<Penguin, number>()
+        ? bin<PenguinRow, number>()
             .value((penguin) => penguin.body_mass_g)
             .thresholds(targetBinCount)(
-              // Only body mass is required for this chart. Keep the other
-              // measurements (including missing values) on each original row.
+              // Select the measurement only at binning time; retain full rows
+              // in the dataset returned by the local usePenguinsDataset hook.
               data.filter((penguin) => Number.isFinite(penguin.body_mass_g)),
             )
         : [],
