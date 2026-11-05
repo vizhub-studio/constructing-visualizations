@@ -66,9 +66,10 @@ selected example from this index.
 
 ## React + D3 organization preferences
 
-The exemplar for our preferred structure is **`010-hovering`** (see also
-`011-tooltips` for the fuller version with axes, labels, and a tooltip). Please
-read those files before writing a new example.
+For a simple chart, start with **`020-basic-histogram`**. For
+interactive, multi-layer charts, see **`010-hovering`** and
+`011-tooltips` (axes, labels, and tooltip). Read the relevant example
+before implementing a new one.
 
 ### SVG groups for layers; extract components where useful
 
@@ -106,12 +107,13 @@ read those files before writing a new example.
       selection: Selection<SVGGElement, unknown, null, undefined>,
       options: RenderCirclesOptions,
     ) {
-      const { data, xScale, yScale, hoveredCircleId } = options;
+      const { data, xScale, yScale, xValue, yValue } = options;
       selection
         .selectAll('circle')
         .data(data)
         .join('circle')
-        .attr('cx', (d) => xScale(d.x))
+        .attr('cx', (d) => xScale(xValue(d)))
+        .attr('cy', (d) => yScale(yValue(d)))
         // ...
     }
     ```
