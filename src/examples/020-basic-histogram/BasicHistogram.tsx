@@ -47,7 +47,7 @@ export function BasicHistogram() {
       .domain([bins[0].x0!, bins[bins.length - 1].x1!])
       .range([margin.left, size.width - margin.right]);
     const yScale = scaleLinear()
-      .domain([0, Math.max(...bins.map((bucket) => bucket.length))])
+      .domain([0, Math.max(...bins.map((bin) => bin.length))])
       .nice()
       .range([size.height - margin.bottom, margin.top]);
     return { xScale, yScale };
