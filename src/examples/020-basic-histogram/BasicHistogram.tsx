@@ -1,0 +1,107 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { bin } from 'd3-array';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { scaleLinear } from 'd3-scale';
+import { select } from 'd3-selection';
+import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
+import { renderMarks, type HistogramBin } from './renderMarks';
+
+const margin = { top: 60, right: 30, bottom: 70, left: 80 };
+const targetBinCount = 20;
+const binGap = 1;
+const xAxisTicks = 8;
+const yAxisTicks = 5;
+const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
+
+// The same body-mass histogram as example 019, without controls, hovering,
+// tooltips, or animation. The essential steps are: load, bin, scale, draw.
+export function BasicHistogram() {
+  const data = usePenguinsDataset();
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const marksRef = useRef<SVGGElement>(null);
+  const xAxisRef = useRef<SVGGElement>(null);
+  const yAxisRef = useRef<SVGGElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // d3.bin turns continuous measurements into intervals containing rows.
+  const bins = useMemo(() => {
+    if (!data) return null;
+
+    // Keep the full dataset; filter only the measurements being binned.
+    const filteredData = data.filter((penguin) => Number.isFinite(binValue(penguin)));
+    if (!filteredData.length) return null;
+
+    return bin<PenguinRow, number>()
+      .value(binValue)
+      .thresholds(targetBinCount)(filteredData) as HistogramBin[];
+  }, [data]);
+
+  const scales = useMemo(() => {
+    if (!bins || !size.width || !size.height) return null;
+    const xScale = scaleLinear()
+      .domain([bins[0].x0, bins[bins.length - 1].x1])
+      .range([margin.left, size.width - margin.right]);
+    const yScale = scaleLinear()
+      .domain([0, Math.max(...bins.map((bin) => bin.length))])
+      .nice()
+      .range([size.height - margin.bottom, margin.top]);
+    return { xScale, yScale };
+  }, [bins, size.width, size.height]);
+
+  // Render the histogram marks with D3, as in the earlier examples.
+  useEffect(() => {
+    if (!bins || !scales || !marksRef.current) return;
+    const { xScale, yScale } = scales;
+    renderMarks(select(marksRef.current), { bins, xScale, yScale, binGap });
+  }, [bins, scales]);
+
+  // D3 draws the axes immediately. There are no transitions.
+  useEffect(() => {
+    if (!scales || !xAxisRef.current || !yAxisRef.current) return;
+    const { xScale, yScale } = scales;
+    select(xAxisRef.current).call(axisBottom(xScale).ticks(xAxisTicks));
+    select(yAxisRef.current).call(axisLeft(yScale).ticks(yAxisTicks));
+  }, [scales]);
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full">
+      <svg className="absolute inset-0 w-full h-full" role="img" aria-label="Histogram of Palmer Penguins body mass">
+        {bins && scales && (
+          <>
+            <g ref={marksRef} className="marks" />
+            <g ref={xAxisRef} transform={'translate(0, ' + (size.height - margin.bottom) + ')'} />
+            <g ref={yAxisRef} transform={'translate(' + margin.left + ', 0)'} />
+            <text x={size.width / 2} y={margin.top / 2} textAnchor="middle" fontSize={20}>
+              Palmer Penguins
+            </text>
+            <text
+              x={margin.left + (size.width - margin.left - margin.right) / 2}
+              y={size.height - margin.bottom + 44}
+              textAnchor="middle"
+              fontSize={14}
+            >
+              Body Mass (g)
+            </text>
+            <text
+              transform={'translate(' + (margin.left - 40) + ', ' + (margin.top + (size.height - margin.top - margin.bottom) / 2) + ') rotate(-90)'}
+              textAnchor="middle"
+              fontSize={14}
+            >
+              Count
+            </text>
+          </>
+        )}
+      </svg>
+    </div>
+  );
+}
