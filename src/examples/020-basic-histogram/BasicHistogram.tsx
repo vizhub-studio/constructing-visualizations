@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { bin, max } from 'd3-array';
+import { bin, type Bin } from 'd3-array';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { scaleLinear } from 'd3-scale';
 import { select } from 'd3-selection';
@@ -8,6 +8,10 @@ import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
 const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
+
+type BoundedBin = Bin<PenguinRow, number> & { x0: number; x1: number };
+const hasBinBounds = (bucket: Bin<PenguinRow, number>): bucket is BoundedBin =>
+  bucket.x0 !== undefined && bucket.x1 !== undefined;
 
 // The same body-mass histogram as example 019, without controls, hovering,
 // tooltips, or animation. The essential steps are: load, bin, scale, draw.
@@ -29,27 +33,28 @@ export function BasicHistogram() {
   }, []);
 
   // d3.bin turns continuous measurements into intervals containing rows.
-  const bins = useMemo(
-    () =>
-      data
-        ? bin<PenguinRow, number>()
-            .value(binValue)
-            .thresholds(targetBinCount)(
-              // Select the measurement only at binning time; retain full rows
-              // in the dataset returned by the local usePenguinsDataset hook.
-              data.filter((penguin) => Number.isFinite(binValue(penguin))),
-            )
-        : [],
-    [data],
-  );
+  const bins = useMemo(() => {
+    if (!data) return null;
+
+    // Keep the full dataset; filter only the measurements being binned.
+    const rows = data.filter((penguin) => Number.isFinite(binValue(penguin)));
+    if (!rows.length) return null;
+
+    const generatedBins = bin<PenguinRow, number>()
+      .value(binValue)
+      .thresholds(targetBinCount)(rows);
+
+    // Validate boundaries here so scales and bars can use them directly.
+    return generatedBins.length > 0 && generatedBins.every(hasBinBounds) ? generatedBins : null;
+  }, [data]);
 
   const scales = useMemo(() => {
-    if (!bins.length || !size.width || !size.height) return null;
+    if (!bins || !size.width || !size.height) return null;
     const xScale = scaleLinear()
-      .domain([bins[0].x0 ?? 0, bins[bins.length - 1].x1 ?? 0])
+      .domain([bins[0].x0, bins[bins.length - 1].x1])
       .range([margin.left, size.width - margin.right]);
     const yScale = scaleLinear()
-      .domain([0, max(bins, (bucket) => bucket.length) ?? 0])
+      .domain([0, Math.max(...bins.map((bucket) => bucket.length))])
       .nice()
       .range([size.height - margin.bottom, margin.top]);
     return { xScale, yScale };
@@ -67,11 +72,11 @@ export function BasicHistogram() {
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <svg className="absolute inset-0 w-full h-full" role="img" aria-label="Histogram of Palmer Penguins body mass">
-        {scales && (
+        {bins && scales && (
           <>
             {bins.map((bucket, index) => {
-              const x = scales.xScale(bucket.x0 ?? 0);
-              const right = scales.xScale(bucket.x1 ?? 0);
+              const x = scales.xScale(bucket.x0);
+              const right = scales.xScale(bucket.x1);
               const y = scales.yScale(bucket.length);
               return (
                 <rect
