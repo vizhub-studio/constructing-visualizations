@@ -60,9 +60,7 @@ export function BasicHistogram() {
     if (!scales || !xAxisRef.current || !yAxisRef.current) return;
     const { xScale, yScale } = scales;
     select(xAxisRef.current).call(axisBottom(xScale).ticks(xAxisTicks));
-    select(yAxisRef.current).call(
-      axisLeft(yScale).tickValues(yScale.ticks(yAxisTicks)),
-    );
+    select(yAxisRef.current).call(axisLeft(yScale).ticks(yAxisTicks));
   }, [scales]);
 
   return (
