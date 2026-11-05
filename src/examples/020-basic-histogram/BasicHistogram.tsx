@@ -61,7 +61,7 @@ export function BasicHistogram() {
     const { xScale, yScale } = scales;
     select(xAxisRef.current).call(axisBottom(xScale).ticks(xAxisTicks));
     select(yAxisRef.current).call(
-      axisLeft(yScale).tickValues(yScale.ticks(yAxisTicks).filter(Number.isInteger)),
+      axisLeft(yScale).tickValues(yScale.ticks(yAxisTicks)),
     );
   }, [scales]);
 
