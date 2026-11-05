@@ -58,9 +58,10 @@ export function BasicHistogram() {
   // D3 draws the axes immediately. There are no transitions.
   useEffect(() => {
     if (!scales || !xAxisRef.current || !yAxisRef.current) return;
-    select(xAxisRef.current).call(axisBottom(scales.xScale).ticks(xAxisTicks));
+    const { xScale, yScale } = scales;
+    select(xAxisRef.current).call(axisBottom(xScale).ticks(xAxisTicks));
     select(yAxisRef.current).call(
-      axisLeft(scales.yScale).tickValues(scales.yScale.ticks(yAxisTicks).filter(Number.isInteger)),
+      axisLeft(yScale).tickValues(yScale.ticks(yAxisTicks).filter(Number.isInteger)),
     );
   }, [scales]);
 
