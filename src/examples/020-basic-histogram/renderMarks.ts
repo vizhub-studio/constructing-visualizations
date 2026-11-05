@@ -11,10 +11,10 @@ export interface RenderMarksOptions {
 
 // React owns the marks group; D3 joins one static rectangle per histogram bin.
 export function renderMarks(
-  marks: Selection<SVGGElement, unknown, null, undefined>,
+  selection: Selection<SVGGElement, unknown, null, undefined>,
   { bins, xScale, yScale }: RenderMarksOptions,
 ) {
-  marks
+  selection
     .selectAll<SVGRectElement, Bin<PenguinRow, number>>('rect')
     .data(bins)
     .join('rect')
