@@ -7,6 +7,8 @@ import { usePenguinsDataset, type PenguinRow } from './usePenguinsDataset';
 
 const margin = { top: 60, right: 30, bottom: 70, left: 80 };
 const targetBinCount = 20;
+const xAxisTicks = 8;
+const yAxisTicks = 5;
 const binValue = (penguin: PenguinRow) => penguin.body_mass_g;
 
 // The same body-mass histogram as example 019, without controls, hovering,
@@ -56,9 +58,9 @@ export function BasicHistogram() {
   // D3 draws the axes immediately. There are no transitions.
   useEffect(() => {
     if (!scales || !xAxisRef.current || !yAxisRef.current) return;
-    select(xAxisRef.current).call(axisBottom(scales.xScale).ticks(8));
+    select(xAxisRef.current).call(axisBottom(scales.xScale).ticks(xAxisTicks));
     select(yAxisRef.current).call(
-      axisLeft(scales.yScale).tickValues(scales.yScale.ticks(5).filter(Number.isInteger)),
+      axisLeft(scales.yScale).tickValues(scales.yScale.ticks(yAxisTicks).filter(Number.isInteger)),
     );
   }, [scales]);
 
