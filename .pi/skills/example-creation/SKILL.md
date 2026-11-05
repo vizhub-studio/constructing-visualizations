@@ -7,7 +7,10 @@ description: How to create a new numbered example in this course repo (src/examp
 
 This skill describes how examples are structured in this repo and the house
 style for organizing React + D3 code. Follow it whenever you add a new example
-or refactor an existing one.
+or refactor an existing one. **First read the
+[Data Visualization Coding Style Guide](../../../docs/DATA_VISUALIZATION_CODING_STYLE.md)**;
+it contains the authoritative coding conventions, including dataset loading,
+accessors, `null` loading states, local hooks, and D3 rendering.
 
 ## Where examples live
 
@@ -15,8 +18,8 @@ or refactor an existing one.
 - Each example is its own directory named with a zero-padded 3-digit number and
   a kebab-case title: `NNN-kebab-case-title/` (e.g. `010-hovering`,
   `011-tooltips`).
-- Each directory contains the example's components, render functions,
-  hooks, config, and a `datasets.json` manifest. Examples are intentionally
+- Each directory contains its needed components, render functions, hooks,
+  optional config, and a `datasets.json` manifest. Examples are intentionally
   self-contained: never import source code from another numbered example. If a
   new example builds on an earlier helper such as `useDimensions` or
   `usePenguinsDataset`, copy that helper into the new example.
@@ -67,13 +70,15 @@ The exemplar for our preferred structure is **`010-hovering`** (see also
 `011-tooltips` for the fuller version with axes, labels, and a tooltip). Please
 read those files before writing a new example.
 
-### One component per visual layer, each rendering an SVG `<g>`
+### SVG groups for layers; extract components where useful
 
-- Decompose the visualization into named layers, each its own React component:
-  marks, axes, labels, overlays, etc. (e.g. `Circles`, `VoronoiOverlay`,
-  `Axes`, `Labels`, `Marks`).
-- Each layer component renders a single container group element with a ref and
-  a descriptive class name:
+- Organize visual layers as named SVG groups (marks, axes, labels, overlays).
+  In simple examples, the entry component can own the groups and their
+  effects, as in `020-basic-histogram`. Extract `Circles`, `Axes`,
+  `Labels`, or other React layer components when that improves clarity
+  or isolates interactive logic; do not require a wrapper for every group.
+- When a layer has its own component, render a container group with a ref
+  and a descriptive class name:
   ```tsx
   const groupRef = useRef<SVGGElement>(null);
   // ...
@@ -82,7 +87,8 @@ read those files before writing a new example.
 - React owns the SVG structure and the `<g>` elements (mounting, ordering,
   layering, className, and static transforms). D3 fills each group with marks.
 - The parent (e.g. `Hovering.tsx`, `Tooltips.tsx`) composes the layers inside
-  one responsive `<svg>`.
+  one responsive `<svg>`. Prefer the simplest organization that keeps
+  the responsibilities clear.
 
 ### D3 selections for marks, JSX for static content
 
@@ -90,19 +96,18 @@ read those files before writing a new example.
   `render*.ts` function called from a `useEffect`. This is the default for
   anything data-driven or state-driven — circles, rects, paths, axes, Voronoi
   cells, etc.
-- The pattern per layer is:
-  - `Component.tsx` — React wrapper: reads props, holds the `useRef`, and calls
-    the render function in `useEffect` with the current props (all props in the
-    dependency array).
-  - `renderComponent.ts` — a pure function that takes the D3 selection and an
-    options object, and does the data join:
+- The standard pattern is:
+  - An entry component or `Component.tsx` owns a group `useRef` and calls the
+    render helper from `useEffect`, listing its changing inputs as dependencies.
+  - `renderMarks.ts`, `renderBars.ts`, `renderCircles.ts`, etc. takes the
+    D3 `selection` and an options object and performs the data join:
     ```ts
     export function renderCircles(
-      group: Selection<SVGGElement, unknown, null, undefined>,
+      selection: Selection<SVGGElement, unknown, null, undefined>,
       options: RenderCirclesOptions,
     ) {
       const { data, xScale, yScale, hoveredCircleId } = options;
-      group
+      selection
         .selectAll('circle')
         .data(data)
         .join('circle')
@@ -124,8 +129,10 @@ read those files before writing a new example.
 
 ### Responsive layout
 
-- Reuse the `useDimensions` hook (copy it into the example directory) to
-  measure the container.
+- **Always put `ResizeObserver` in a dedicated local `useDimensions.ts`
+  hook** when measuring a container; never inline the resize effect in the
+  chart component. Copy the established hook into the example directory
+  (for example from `019-single-histogram`).
 - Set up the container as `<div ref={divRef} className="relative w-full h-full">`
   and the `<svg className="absolute inset-0 w-full h-full">`.
 - Guard rendering until dimensions are non-zero and scales exist.
@@ -134,10 +141,19 @@ read those files before writing a new example.
 
 ### Other conventions
 
-- Keep all tweakable values (margins, titles, axis labels, font sizes,
-  accessors) in a `config.ts` file so they can be adjusted in one place, including the margins.
+- Keep tweakable values (margins, titles, axis labels, font sizes, tick counts,
+  bin gaps) in named constants near the top of the component. Use `config.ts`
+  when several files share substantial configuration, not as a requirement
+  for a handful of constants.
+- The dataset hook must preserve all source rows and columns; define named
+  accessors (e.g. `xValue`, `yValue`, `binValue`) for fields used in
+  visual encodings, filters, or bins.
+- Represent missing/not-yet-loaded dataset values with `null`, distinct
+  from a loaded empty array. Guard `null` before deriving scales or marks;
+  don't hide loading with `?? 0` or placeholder data.
 - Use `useMemo` to derive filtered/processed data rather than recomputing it
-  inline every render (e.g. dropping `NA` rows in `011-tooltips`).
+  inline every render; call filtered subsets `filteredData` and leave
+  the source `data` intact.
 - Keep a single piece of interaction state (e.g. `hoveredIndex`) in the parent;
   overlays set it and layers derive their appearance from it.
 - Memoize comment-worthy logic, but prefer clear, short comments explaining
@@ -147,9 +163,11 @@ read those files before writing a new example.
 
 ## Checklist for a new example
 
+0. Read the [coding style guide](../../../docs/DATA_VISUALIZATION_CODING_STYLE.md).
 1. Create the example directory using the next number (`highest + 1`, 3-digit
    padded).
-2. Copy required reusable helpers locally.
+2. Copy required reusable helpers locally, including `useDimensions.ts`
+   when observing container size.
 3. Do not import another numbered example.
 4. Create `datasets.json`.
 5. Register the example in `src/examples/index.ts`.
