@@ -1,6 +1,25 @@
-# constructing-visualizations-2026
+# Constructing Visualizations (2026)
 
 [YouTube Playlist](https://www.youtube.com/watch?v=Exdnvbm8uQ8&list=PL9yYRbwpkykt6c23sKt8yJ-vhaSU6eXIK)
+
+## Repository guide
+
+This repository accompanies the **2026 Constructing Visualizations** teaching materials. The weekly reading and video links below are course content; they are not a release plan or a guarantee that every chapter is implemented.
+
+The checked-in `package.json` provides a Vite development workflow:
+
+```bash
+npm ci
+npm run dev
+npm run validate:examples
+npm run lint
+npm run build
+```
+
+- [`src/`](src/) contains the application and examples; [`docs/`](docs/) contains supporting material.
+- [`scripts/validate-examples.mjs`](scripts/validate-examples.mjs) is the repository-specific example validation entry point; it does not replace visual inspection of individual examples.
+- [`AGENTS.md`](AGENTS.md) contains repository development guidance.
+- See [VizHub](https://vizhub.com/) for the visualization platform; this source repository is a separate educational project.
 
 ## Week 1
 
