@@ -19,6 +19,7 @@ import { ScatterPlotAndBarChart } from './017-scatter-plot-and-bar-chart/Scatter
 import { BrushScatterToBars } from './018-brush-scatter-to-bars/BrushScatterToBars';
 import { SingleHistogram } from './019-single-histogram/SingleHistogram';
 import { BasicHistogram } from './020-basic-histogram/BasicHistogram';
+import { SmallMultiplesHistograms } from './021-small-multiples-histograms/SmallMultiplesHistograms';
 
 export interface Example {
   id: string;
@@ -126,6 +127,11 @@ export const examples: Example[] = [
     id: '20',
     name: 'Basic Histogram',
     component: BasicHistogram,
+  },
+  {
+    id: '21',
+    name: 'Small Multiples Histograms',
+    component: SmallMultiplesHistograms,
   },
 ];
 

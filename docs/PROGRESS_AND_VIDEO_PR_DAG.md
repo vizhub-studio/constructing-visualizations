@@ -186,3 +186,20 @@ At the reviewed main snapshot, after installing locked dependencies:
 - No browser visual check or video-publication verification was performed. These passes are local results, not claims about CI or deployment.
 
 For this documentation change, check formatting, relative links, node uniqueness, predecessor existence, and acyclicity. At the next review, compare main against the SHA above, inspect open/merged/closed PRs, map changed directories to roadmap nodes, and update code and video statuses separately. Keep confirmed changes, unresolved work, and suggested priorities distinct; preserve older dated snapshots when adding a new review.
+
+## Implementation follow-up — V6.2 small multiples (2026-11-07 UTC)
+
+This change proposes **Example 021: Small Multiples Histograms** for roadmap
+node **V6.2**, on the branch
+[`example/021-small-multiples-histograms`](https://github.com/vizhub-studio/constructing-visualizations/tree/example/021-small-multiples-histograms).
+It adds four Palmer Penguins measurement histograms using one local reusable
+`Histogram` component, independent x domains and one shared count scale.
+
+**Status:** implemented on this PR branch; not counted as merged until the PR
+is merged into `main`. The associated recording/publication is **unverified**.
+The dated November 6 baseline and its "Planned" inventory above are retained
+as historical observations.
+
+The existing dependency graph is unchanged: V6.3 (single interval brush) can
+be built independently from V6.1; V6.4 depends on both V6.2 and V6.3; V6.5
+depends on V6.4. Their code and videos remain planned/unverified.
